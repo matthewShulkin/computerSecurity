@@ -1,0 +1,55 @@
+#!/usr/bin/python3
+
+import argparse
+import sys
+
+def decrypt(ciphertext, key, block_size):
+    num_columns = len(key)
+    chars_per_block = block_size
+
+    blocks = [list(ciphertext[i:i + chars_per_block]) for i in range(0, len(ciphertext), chars_per_block)]
+
+    key_order = [i for i in range(num_columns)]
+    key_order.sort(key=lambda x: key[x])
+
+    print(key_order)
+    plaintext_for_ciphertext = ""
+
+    for block_num, block in enumerate(blocks):
+        table = [block[i:i + num_columns] + [''] * (num_columns - len(block[i:i + num_columns]))
+                 for i in range(0, len(block), num_columns)]
+
+        #print(f"\nTable {block_num + 1}:")
+        #for row in table:
+             #print(''.join(row))
+
+        plaintext__for_each_block = ''.join([''.join([table[row][col] for row in range(len(table))]) for col in key_order])
+
+        #print(f"Plaintext for block {block_num + 1}:", plaintext_block)
+    
+        plaintext_for_ciphertext += plaintext__for_each_block
+
+    # print("\nCombined Plaintext:", combined_plaintext)
+
+    return plaintext_for_ciphertext
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-b', '--blocksize', type=int)
+    parser.add_argument('-k', '--key', type=str)
+    parser.add_argument('ciphertextfile', type=str)
+
+    args = parser.parse_args()
+
+    try:
+        with open(args.ciphertextfile, 'r') as file:
+            input_text = file.read().replace('\n', '')
+    except FileNotFoundError:
+        print(f"Error: File '{args.ciphertextfile}' not found.")
+        sys.exit(1)
+
+    result = decrypt(list(input_text), args.key, args.blocksize)
+    print(result)
+
+if __name__ == "__main__":
+    main()

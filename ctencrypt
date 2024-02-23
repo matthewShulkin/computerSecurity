@@ -1,0 +1,71 @@
+#!/usr/bin/python3
+
+import argparse
+import sys
+
+def encrypt(plaintext, key, block_size):
+    num_columns = len(key) #also known as max width of a table
+    
+    #num_rows = (len(plaintext) + num_columns - 1) // num_columns dont need
+    #chars_per_block = min(block_size, len(plaintext)) dont need
+    
+    chars_per_block = block_size 
+    
+
+    blocks = [list(plaintext[i:i + chars_per_block]) for i in range(0, len(plaintext), chars_per_block)]
+
+    new_key = ''.join(sorted(key))  
+    key_order = [i for i in range(num_columns)] #calculates in which order the key should be read after sorting in Ascii order
+    key_order.sort(key=lambda x: key[x])
+
+    #test to make sure ascii sort is working as needed
+    #print("Key Order:", key_order)
+    #print("Sorted Key:", new_key)
+
+    ciphertext = ""
+
+    for block_num, block in enumerate(blocks):
+        # makes a table for each block
+        table = [block[i:i + num_columns] + [''] * (num_columns - len(block[i:i + num_columns]))
+                 for i in range(0, len(block), num_columns)]
+
+        #print(f"\nTable {block_num + 1}:")
+        #for row in table:
+        #    print(''.join(row))
+
+        # makes a ciphertext for each block
+        ciphertext_for_each_block = ''.join([''.join([table[row][col] for row in range(len(table))]) for col in key_order])
+        #print(f"Ciphertext for block {block_num + 1}:", ciphertext_block)
+
+        ciphertext += ciphertext_for_each_block
+
+    print(ciphertext)
+
+    return ciphertext
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-b', '--blocksize', type=int)
+    parser.add_argument('-k', '--key', type=str)
+    parser.add_argument('plaintextfile', type=str)
+
+    args = parser.parse_args()
+
+    if args.plaintextfile:
+        with open(args.plaintextfile, 'r') as file:
+            input_text = file.read().replace('\n', '')
+    else:
+        # Read from standard input until EOF
+        input_text = sys.stdin.read()
+
+    result = encrypt(list(input_text), args.key, args.blocksize)
+    print(result)
+    
+    
+    #key = "Monkey"
+    #plaintext = "ThisIsATest"
+    #block_size = 7
+    #ciphertext = encrypt(list(plaintext), key, block_size)
+
+if __name__ == "__main__":
+    main()

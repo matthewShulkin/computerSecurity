@@ -1,0 +1,68 @@
+#!/usr/bin/python3
+
+import sys
+def lcg(initial_value):
+    m = 256         #modulus
+    a = 1103515245  #multiplier
+    c = 12345       #increment
+    
+    initial_value = (a * initial_value + c) % m
+    return initial_value
+
+def sbdm(password):
+    hash = 0
+    for char in password:
+        hash = ord(char) + (hash << 6) + (hash << 16) - hash
+    return hash
+
+def padding(plaintext):
+    pad_size = 16 - (len(plaintext) % 16)
+    padding = bytes([pad_size] * pad_size)
+    pad = plaintext + padding   
+    return pad
+
+def swap(block_list, i, j ):
+    block_list[i], block_list[j] = block_list[j], block_list[i]
+    
+
+def sbencrypt(password, plaintext_file, ciphertext_file):
+    seed = sbdm(password)
+    
+    with open(plaintext_file, 'rb') as plaintext, open(ciphertext_file, 'wb') as ciphertext:
+        last_block = bytes([seed] * 16)
+        
+        while True:
+            block = plaintext.read(16)
+            if not block:
+                break
+            block = padding(block) if len(block) < 16 else block
+            # initialization vecotor which applys cbc to first block
+            IV = bytes(a ^ last_block[i] for i, a in enumerate(block))
+            key = bytes(lcg(seed) for _ in range(16))
+
+            for i in range(16):
+                first = key[i] & 0xF
+                second = (key[i] >> 4) & 0xF
+                swap(block, first, second)
+    
+
+def main():
+    password = sys.argv[1]
+    plaintext = sys.argv[2]
+    ciphertext = sys.argv[3]
+    
+    sbencrypt(password, plaintext, ciphertext)
+    #import argparse
+
+    #parser = argparse.ArgumentParser(description="Stream Cipher Implementation")
+    #parser.add_argument("password", help="Textual password")
+    #parser.add_argument("input_file", help="Input file (plaintext or ciphertext)")
+    #parser.add_argument("output_file", help="Output file (ciphertext or decrypted text)")
+    #args = parser.parse_args()
+
+    #testy test
+    #print(f"Password: {args.password}, Input File: {args.plaintext}, Output File: {args.ciphertext}")
+    
+    
+if __name__ == "__main__":
+    main()

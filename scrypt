@@ -1,0 +1,57 @@
+#!/usr/bin/python3
+
+import sys
+import ctypes
+
+def lcg(initial_value):
+    m = 256         #modulus
+    a = 1103515245  #multiplier
+    c = 12345       #increment
+    
+    initial_value = (a * initial_value + c) % m
+    return initial_value
+
+def sbdm(password):
+    hash = 0
+    for char in password:
+        hash = ord(char) + (hash << 6) + (hash << 16) - hash
+    return hash
+
+def stream_cipher(password, plaintext, ciphertext):
+    seed= sbdm(password)
+    
+    with open(plaintext, 'rb') as plaintextfile, open(ciphertext, 'wb') as ciphertextfile:
+        while True:
+            plaintext_byte = plaintextfile.read(1)
+            if not plaintext_byte:
+                break
+            
+            seed = lcg(seed)
+            ciphertext_byte = ord(plaintext_byte) ^ seed
+            ciphertextfile.write(bytes([ciphertext_byte]))
+             
+
+def main():
+    password = sys.argv[1]
+    plaintext = sys.argv[2]
+    ciphertext = sys.argv[3]
+    
+        
+    stream_cipher(password, plaintext, ciphertext)
+    
+    
+    #import argparse
+
+    #parser = argparse.ArgumentParser(description="Stream Cipher Implementation")
+    #parser.add_argument("password", help="Textual password")
+    #parser.add_argument("input_file", help="Input file (plaintext or ciphertext)")
+    #parser.add_argument("output_file", help="Output file (ciphertext or decrypted text)")
+    #args = parser.parse_args()
+
+    #testy test
+    #print(f"Password: {args.password}, Input File: {args.plaintext}, Output File: {args.ciphertext}")
+    
+
+
+if __name__ == "__main__":
+    main()
